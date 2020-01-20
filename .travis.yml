@@ -2,56 +2,45 @@ git:
   depth: 3
 env:
   global:
-  - secure: "L/pzocpnCGawVmTwPt+Y8xxTryePptOdkNM4NvJLVsyH5aIz+026TFwZ2lR01mBjhclO/CbdyaW774PRq4XE4qN/huSs35fXbyw9z6NoF+QgC99MrbNVvEsXdERY/3s+HLw+KgtYbDnxaicPutq65dmJgOipH7vYACyKPpgAiTg="
-  - secure: "Wv8lNh+gdT5sq2prOl1xVd5f0yMBJRxzs2l+x/J8XwtEfLNvof9HTX7hfkpF8/r6wpM8GtqGOHsq3XMHGwrIrX1TaYrDGPlQ6BXb07nWW+G6YIzjwTK8df+VRd5lGeJol+HW7TYstC+Hn82UAYjkoUCI86yHxNgImftrMT6ez6A="
-  - AWS_DEFAULT_REGION: "us-east-1"
+  - AWS_DEFAULT_REGION: us-west-1
   - S3_PARAMS: '"--acl public-read --cache-control \"public,must-revalidate,proxy-revalidate,max-age=0\""'
   - CMAKE_BUILD_PARALLEL_LEVEL: 4
-  - LINUX_CMAKE_PARAMS: '"-DALSOFT_REQUIRE_ALSA=ON -DALSOFT_REQUIRE_OSS=ON -DALSOFT_REQUIRE_PORTAUDIO=ON -DALSOFT_REQUIRE_PULSEAUDIO=ON -DALSOFT_REQUIRE_JACK=ON -DALSOFT_EMBED_HRTF_DATA=YES -DCMAKE_BUILD_TYPE=Release"'
-
+  - LINUX_CMAKE_PARAMS: '"-DALSOFT_REQUIRE_ALSA=ON -DALSOFT_REQUIRE_OSS=ON -DALSOFT_REQUIRE_PORTAUDIO=ON
+      -DALSOFT_REQUIRE_PULSEAUDIO=ON -DALSOFT_REQUIRE_JACK=ON -DALSOFT_EMBED_HRTF_DATA=YES
+      -DCMAKE_BUILD_TYPE=Release"'
+  - secure: C/sV9zZCDy0K3nkWMXU4m0AgEs3Ye5/FuPeXMqoO+GlL91oCtUAefeejVucNRqS+JqfYbcjm12JFWs9rThgeh1KMuzeDFvjbEK+Kkk8D6AJSmioHMb4BubTbwGaf314JNWtxMvAVbVRp3HGSFw9KvmqWC/LUakN3wAgzro2JOd3f6lS0brpJDavYBqpGkwM1sF1lMUS9ncEya1DzABDXfMtS4AXtwA35g1tztu3P6qToj11rWnD/nerV3/jaaLMmhgV/9irAf0+Z5irUYqcFzgy25EvbGrL8Oq3WT290O5J7hvN8+coT1nnDmBU3mxNeFisNiFY91Vl/sQMOnJzV7NcZzyjV4KCh//vwq1cqcyYwneN3Vx3MHItMy7y3hYTDPjslOTHZtt14Q1P1dMRDoloXn2k8IAZWd3qcfhoP6udDCjaehhNS/KbaTJFNrRKChBu31LYYFSHajnSBcU2rWRnZf3PLlRQP5e25NqT8s9JPyqCr1957CZUzkstXuTEMNEnsrVfv8hOalvYYt+WhcuC1+suS5hfsPYUo47l4P8xYYyF/6MJbFEGldysJDcVtkCD9LWYOo1FcT7QUsHlIKjFB5Vw35+EkoFHvaz/vdB8zCEDG326ekwgG+BSwyz9iRzxynaKDn+/TjCknM6eHtguyY2JeBzGWivz+lzfbs7k=
 matrix:
   include:
-
-  # -----------------
-  - name: "Linux x64"
-  # -----------------
+  - name: Linux x64
     dist: xenial
     language: c
     compiler: gcc
-
     addons:
       apt:
         packages:
-        #- gcc-5.4
-        #- g++-5.4
         - cmake
         - libpulse-dev
         - portaudio19-dev
         - libasound2-dev
         - libjack-dev
-
     before_install:
     - pip install --user awscli
     - export PATH=$PATH:$HOME/.local/bin
-
     script:
     - mkdir LINUX
     - cd LINUX
-    #- "CC=gcc-5.4 CXX=g++-5.4 cmake $LINUX_CMAKE_PARAMS -DCMAKE_C_FLAGS=\"-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0\" -DCMAKE_SHARED_LINKER_FLAGS=-Wl,--wrap,memcpy .."
-    - "cmake $LINUX_CMAKE_PARAMS -DCMAKE_C_FLAGS=\"-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0\" -DCMAKE_SHARED_LINKER_FLAGS=-Wl,--wrap,memcpy .."
+    - cmake $LINUX_CMAKE_PARAMS -DCMAKE_C_FLAGS="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0"
+      -DCMAKE_SHARED_LINKER_FLAGS=-Wl,--wrap,memcpy ..
     - cmake --build .
     - strip libopenal.so
-    - "git log --first-parent --pretty=format:%H HEAD~2..HEAD~1 > revision.git"
-    - "aws s3 cp libopenal.so s3://build.lwjgl.org/nightly/linux/x64/libopenal.so $S3_PARAMS"
-    - "aws s3 cp revision.git s3://build.lwjgl.org/nightly/linux/x64/libopenal.so.git $S3_PARAMS"
-
-  # -----------------
-  - name: "Linux arm32"
-  # -----------------
+    - git log --first-parent --pretty=format:%H HEAD~2..HEAD~1 > revision.git
+    - aws s3 cp libopenal.so s3://lwjgl-mips64/nightly/linux/x64/libopenal.so $S3_PARAMS
+    - aws s3 cp revision.git s3://lwjgl-mips64/nightly/linux/x64/libopenal.so.git
+      $S3_PARAMS
+  - name: Linux arm32
     dist: xenial
     language: c
     compiler: gcc
-
     addons:
       apt:
         packages:
@@ -59,7 +48,6 @@ matrix:
         - gcc-5-arm-linux-gnueabihf
         - g++-5-arm-linux-gnueabihf
         - libc6-dev-armhf-cross
-
     before_install:
     - pip install --user awscli
     - export PATH=$PATH:$HOME/.local/bin
@@ -69,25 +57,24 @@ matrix:
     - sudo sed -i 's#http://.*/ubuntu#http://ports.ubuntu.com/ubuntu-ports#' /etc/apt/sources.list.d/ports.list
     - sudo dpkg --add-architecture armhf
     - sudo apt-get update || true
-    - sudo apt-get -yq --no-install-suggests --no-install-recommends install libpulse-dev:armhf libglib2.0-dev:armhf portaudio19-dev:armhf libasound2-dev:armhf libjack-dev:armhf
-
+    - sudo apt-get -yq --no-install-suggests --no-install-recommends install libpulse-dev:armhf
+      libglib2.0-dev:armhf portaudio19-dev:armhf libasound2-dev:armhf libjack-dev:armhf
     script:
     - mkdir LINUX
     - cd LINUX
-    - "cmake -DCMAKE_TOOLCHAIN_FILE=../XCompile-arm.txt -DHOST=arm-linux-gnueabihf $LINUX_CMAKE_PARAMS -DCMAKE_C_FLAGS=\"-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0\" .."
+    - cmake -DCMAKE_TOOLCHAIN_FILE=../XCompile-arm.txt -DHOST=arm-linux-gnueabihf
+      $LINUX_CMAKE_PARAMS -DCMAKE_C_FLAGS="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0"
+      ..
     - cmake --build .
     - arm-linux-gnueabihf-strip libopenal.so
-    - "git log --first-parent --pretty=format:%H HEAD~2..HEAD~1 > revision.git"
-    - "aws s3 cp libopenal.so s3://build.lwjgl.org/nightly/linux/arm32/libopenal.so $S3_PARAMS"
-    - "aws s3 cp revision.git s3://build.lwjgl.org/nightly/linux/arm32/libopenal.so.git $S3_PARAMS"
-
-  # -----------------
-  - name: "Linux arm64"
-  # -----------------
+    - git log --first-parent --pretty=format:%H HEAD~2..HEAD~1 > revision.git
+    - aws s3 cp libopenal.so s3://lwjgl-mips64/nightly/linux/arm32/libopenal.so $S3_PARAMS
+    - aws s3 cp revision.git s3://lwjgl-mips64/nightly/linux/arm32/libopenal.so.git
+      $S3_PARAMS
+  - name: Linux arm64
     dist: xenial
     language: c
     compiler: gcc
-
     addons:
       apt:
         packages:
@@ -96,7 +83,6 @@ matrix:
         - gcc-5-aarch64-linux-gnu
         - g++-5-aarch64-linux-gnu
         - libc6-dev-arm64-cross
-
     before_install:
     - pip install --user awscli
     - export PATH=$PATH:$HOME/.local/bin
@@ -106,37 +92,69 @@ matrix:
     - sudo sed -i 's#http://.*/ubuntu#http://ports.ubuntu.com/ubuntu-ports#' /etc/apt/sources.list.d/ports.list
     - sudo dpkg --add-architecture arm64
     - sudo apt-get update || true
-    - sudo apt-get -yq --no-install-suggests --no-install-recommends install libpulse-dev:arm64 portaudio19-dev:arm64 libasound2-dev:arm64 libjack-dev:arm64
-
+    - sudo apt-get -yq --no-install-suggests --no-install-recommends install libpulse-dev:arm64
+      portaudio19-dev:arm64 libasound2-dev:arm64 libjack-dev:arm64
     script:
     - mkdir LINUX
     - cd LINUX
-    - "cmake -DCMAKE_TOOLCHAIN_FILE=../XCompile-arm.txt -DHOST=aarch64-linux-gnu $LINUX_CMAKE_PARAMS -DCMAKE_C_FLAGS=\"-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0\" .."
+    - cmake -DCMAKE_TOOLCHAIN_FILE=../XCompile-arm.txt -DHOST=aarch64-linux-gnu $LINUX_CMAKE_PARAMS
+      -DCMAKE_C_FLAGS="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0" ..
     - cmake --build .
     - aarch64-linux-gnu-strip libopenal.so
-    - "git log --first-parent --pretty=format:%H HEAD~2..HEAD~1 > revision.git"
-    - "aws s3 cp libopenal.so s3://build.lwjgl.org/nightly/linux/arm64/libopenal.so $S3_PARAMS"
-    - "aws s3 cp revision.git s3://build.lwjgl.org/nightly/linux/arm64/libopenal.so.git $S3_PARAMS"
-
-  # -----------------
-  - name: "macOS"
-  # -----------------
+    - git log --first-parent --pretty=format:%H HEAD~2..HEAD~1 > revision.git
+    - aws s3 cp libopenal.so s3://lwjgl-mips64/nightly/linux/arm64/libopenal.so $S3_PARAMS
+    - aws s3 cp revision.git s3://lwjgl-mips64/nightly/linux/arm64/libopenal.so.git
+      $S3_PARAMS
+  - name: Linux mips64
+    dist: xenial
+    language: c
+    compiler: gcc
+    addons:
+      apt:
+        packages:
+        - cmake
+        - cmake-data
+        - gcc-5-mips64el-linux-gnuabi64
+        - g++-5-mips64el-linux-gnuabi64
+        - libc6-dev-mips64el-cross
+    before_install:
+    - pip install --user awscli
+    - export PATH=$PATH:$HOME/.local/bin
+    - sudo rm -rf /etc/apt/sources.list
+    - sudo sh -c "echo 'deb http://deb.debian.org/debian stretch main' >> /etc/apt/sources.list"
+    - sudo dpkg --add-architecture mips64el
+    - sudo apt-get update || true
+    - sudo apt-get -yq --allow-unauthenticated --no-install-suggests --no-install-recommends
+      install libpulse-dev:mips64el portaudio19-dev:mips64el libasound2-dev:mips64el
+      libjack-dev:mips64el -o Dpkg::Options::="--force-overwrite"
+    script:
+    - mkdir LINUX
+    - cd LINUX
+    - cmake -DCMAKE_TOOLCHAIN_FILE=../XCompile-arm.txt -DHOST=mips64el-linux-gnuabi64
+      $LINUX_CMAKE_PARAMS -DCMAKE_C_FLAGS="-U_FORTIFY_SOURCE -D_FORTIFY_SOURCE=0"
+      ..
+    - cmake --build .
+    - mips64el-linux-gnuabi64-strip libopenal.so
+    - git log --first-parent --pretty=format:%H HEAD~2..HEAD~1 > revision.git
+    - aws s3 cp libopenal.so s3://lwjgl-mips64/nightly/linux/mips64/libopenal.so $S3_PARAMS
+    - aws s3 cp revision.git s3://lwjgl-mips64/nightly/linux/mips64/libopenal.so.git
+      $S3_PARAMS
+  - name: macOS
     language: objective-c
     osx_image: xcode11.3
     compiler: clang
-
     before_install:
     - brew update
-
     install:
     - brew install awscli
-
     script:
     - mkdir OSX
     - cd OSX
-    - cmake -DALSOFT_REQUIRE_COREAUDIO=ON -DALSOFT_EMBED_HRTF_DATA=YES -DCMAKE_BUILD_TYPE=Release -DCMAKE_OSX_DEPLOYMENT_TARGET=10.9 ..
+    - cmake -DALSOFT_REQUIRE_COREAUDIO=ON -DALSOFT_EMBED_HRTF_DATA=YES -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_OSX_DEPLOYMENT_TARGET=10.9 ..
     - cmake --build .
     - strip -u -r libopenal.dylib
-    - "git log --first-parent --pretty=format:%H HEAD~2..HEAD~1 > revision.git"
-    - "aws s3 cp libopenal.dylib s3://build.lwjgl.org/nightly/macosx/x64/libopenal.dylib $S3_PARAMS"
-    - "aws s3 cp revision.git s3://build.lwjgl.org/nightly/macosx/x64/libopenal.dylib.git  $S3_PARAMS"
+    - git log --first-parent --pretty=format:%H HEAD~2..HEAD~1 > revision.git
+    - aws s3 cp libopenal.dylib s3://lwjgl-mips64/nightly/macosx/x64/libopenal.dylib
+      $S3_PARAMS
+    - aws s3 cp revision.git s3://lwjgl-mips64/nightly/macosx/x64/libopenal.dylib.git  $S3_PARAMS
